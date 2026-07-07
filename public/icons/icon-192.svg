@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="PesoPilot icon">
+  <rect width="192" height="192" rx="42" fill="#f8faf6"/>
+  <path d="M53 57h57c23 0 38 13 38 33s-15 33-38 33H84v28H53V57Z" fill="#2f3328"/>
+  <path d="M84 83v15h25c6 0 9-3 9-8s-3-7-9-7H84Z" fill="#f8faf6"/>
+  <path d="M44 116h104" stroke="#be3b2f" stroke-width="12" stroke-linecap="round"/>
+</svg>
