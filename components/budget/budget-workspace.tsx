@@ -67,10 +67,6 @@ export function BudgetWorkspace() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        title="Budget"
-        description="Monthly spending limits, savings goals, and simple planning rules."
-      />
       <div className="rounded-[1.65rem] bg-white/76 p-3 shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
         <div className="grid grid-cols-2 divide-x divide-border/70">
           <SummaryValue label="Budgeted" value={budgetedCentavos} />
