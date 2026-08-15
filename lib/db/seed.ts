@@ -1,9 +1,8 @@
 import type { AppSettings } from "@/types/finance"
 import { DEFAULT_CATEGORIES } from "@/lib/constants/categories"
-import { migrateAccountsToProductModel } from "@/lib/db/repositories/accounts"
+import { migrateAccountsToProductModel } from "@/lib/db/account-maintenance"
 import { getDb, nowIso } from "@/lib/db/client"
-
-export const SETTINGS_ID = "local"
+import { SETTINGS_ID } from "@/lib/db/constants"
 
 export function createDefaultSettings(): AppSettings {
   const now = nowIso()

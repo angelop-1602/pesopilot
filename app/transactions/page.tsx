@@ -1,5 +1,5 @@
-import { TransactionsWorkspace } from "@/components/transactions/transactions-workspace"
+import { FinancialActivityWorkspace } from "@/features/financial-activity"
 
 export default function TransactionsPage() {
-  return <TransactionsWorkspace />
+  return <FinancialActivityWorkspace />
 }

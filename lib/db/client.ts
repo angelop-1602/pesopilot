@@ -3,13 +3,13 @@ import Dexie, { type EntityTable } from "dexie"
 import type {
   Account,
   AppSettings,
-  AutomaticBackupTarget,
   Bill,
   Category,
   MonthlyBudget,
   SavingsGoal,
   Transaction,
 } from "@/types/finance"
+import type { AutomaticBackupTarget } from "@/lib/backup/types"
 
 export class PesoPilotDatabase extends Dexie {
   accounts!: EntityTable<Account, "id">
