@@ -1,4 +1,4 @@
-import { BudgetWorkspace } from "@/components/budget/budget-workspace"
+import { BudgetWorkspace } from "@/features/budget"
 
 export default function BudgetPage() {
   return <BudgetWorkspace />

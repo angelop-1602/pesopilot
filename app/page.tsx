@@ -1,4 +1,4 @@
-import { DashboardWorkspace } from "@/components/dashboard/dashboard-workspace"
+import { DashboardWorkspace } from "@/features/dashboard"
 
 export default function Home() {
   return <DashboardWorkspace />

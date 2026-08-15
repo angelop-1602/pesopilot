@@ -63,6 +63,8 @@ export type BudgetMethod = "zero-based" | "fifty-thirty-twenty" | "envelope"
 
 export type BillFrequency = "monthly" | "weekly" | "yearly"
 
+export type BillOccurrenceStatus = "paid" | "pending" | "overdue"
+
 export type GoalStatus = "active" | "paused" | "completed"
 
 export interface BaseRecord {
@@ -114,6 +116,7 @@ export interface Transaction extends BaseRecord {
   transferAccountId?: Id
   categoryId?: Id
   billId?: Id
+  billOccurrenceDate?: string
   date: string
   description: string
   notes?: string
@@ -140,10 +143,32 @@ export interface Bill extends BaseRecord {
   accountId?: Id
   categoryId?: Id
   dueDay: number
+  firstDueDate?: string
   frequency: BillFrequency
   autopay: boolean
   active: boolean
   notes?: string
+}
+export interface BillOccurrence {
+  occurrenceKey: string
+  billId: Id
+  bill: Bill
+  dueDate: string
+  expectedAmountCentavos: number
+  paidAmountCentavos: number
+  paymentTransactionIds: Id[]
+  status: BillOccurrenceStatus
+}
+
+export interface PendingCommitments {
+  items: BillOccurrence[]
+  totalCentavos: number
+}
+
+export interface SafeToSpendSummary {
+  availableAssetsCentavos: number
+  pendingCommitmentsCentavos: number
+  safeToSpendCentavos: number
 }
 
 export interface AppSettings extends BaseRecord {
@@ -154,82 +179,4 @@ export interface AppSettings extends BaseRecord {
   timezone: "Asia/Manila"
   budgetMethod: BudgetMethod
   showInstallTips: boolean
-}
-
-export interface AutomaticBackupTarget extends BaseRecord {
-  enabled: boolean
-  fileHandle?: unknown
-  encryptionPassword?: string
-  lastBackupAt?: string
-  lastError?: string
-}
-
-export interface FinanceBackup {
-  schemaVersion: 1
-  exportedAt: string
-  app: "PesoPilot"
-  data: {
-    accounts: Account[]
-    categories: Category[]
-    transactions: Transaction[]
-    budgets: MonthlyBudget[]
-    goals: SavingsGoal[]
-    bills: Bill[]
-    settings: AppSettings[]
-  }
-}
-
-export interface AccountFormValues {
-  id?: Id
-  institutionKey: InstitutionKey
-  accountProductType: AccountProductType
-  openingBalance: string
-  creditLimit?: string
-  statementDay?: number
-  paymentDueDay?: number
-  includeInNetWorth: boolean
-  allowOverLimit?: boolean
-}
-
-export interface TransactionFormValues {
-  id?: Id
-  type: TransactionType
-  amount: string
-  accountId: Id
-  transferAccountId?: Id
-  categoryId?: Id
-  billId?: Id
-  date: string
-  description: string
-  notes?: string
-}
-
-export interface BudgetFormValues {
-  id?: Id
-  monthId: string
-  categoryId: Id
-  limit: string
-}
-
-export interface GoalFormValues {
-  id?: Id
-  name: string
-  target: string
-  current: string
-  targetDate?: string
-  linkedAccountId?: Id
-  status: GoalStatus
-}
-
-export interface BillFormValues {
-  id?: Id
-  name: string
-  amount: string
-  accountId?: Id
-  categoryId?: Id
-  dueDay: number
-  frequency: BillFrequency
-  autopay: boolean
-  active: boolean
-  notes?: string
 }

@@ -46,5 +46,5 @@ export function useLiveQuery<T>(
     }
   }, [query, runQuery])
 
-  return { data: value, isLoading, error }
+  return { data: value, isLoading, error, refresh: runQuery }
 }

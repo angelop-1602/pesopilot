@@ -1,4 +1,4 @@
-import { AccountsWorkspace } from "@/components/accounts/accounts-workspace"
+import { AccountsWorkspace } from "@/features/accounts"
 
 export default function AccountsPage() {
   return <AccountsWorkspace />

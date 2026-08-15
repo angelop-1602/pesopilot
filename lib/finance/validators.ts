@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { isInputDate } from "@/lib/finance/dates"
+
 export const idSchema = z.string().min(1)
 
 export const accountSchema = z.object({
@@ -70,7 +72,6 @@ export const categorySchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 })
-
 export const transactionSchema = z
   .object({
     id: idSchema,
@@ -80,6 +81,11 @@ export const transactionSchema = z
     transferAccountId: z.string().optional(),
     categoryId: z.string().optional(),
     billId: z.string().optional(),
+    billOccurrenceDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .refine(isInputDate)
+      .optional(),
     date: z.string().min(10),
     description: z.string().min(1),
     notes: z.string().optional(),
@@ -123,6 +129,11 @@ export const billSchema = z.object({
   categoryId: z.string().optional(),
   dueDay: z.number().int().min(1).max(31),
   frequency: z.enum(["monthly", "weekly", "yearly"]),
+  firstDueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(isInputDate)
+    .optional(),
   autopay: z.boolean(),
   active: z.boolean(),
   notes: z.string().optional(),
@@ -141,19 +152,4 @@ export const settingsSchema = z.object({
   showInstallTips: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
-})
-
-export const backupSchema = z.object({
-  schemaVersion: z.literal(1),
-  exportedAt: z.string(),
-  app: z.literal("PesoPilot"),
-  data: z.object({
-    accounts: z.array(accountSchema),
-    categories: z.array(categorySchema),
-    transactions: z.array(transactionSchema),
-    budgets: z.array(budgetSchema),
-    goals: z.array(goalSchema),
-    bills: z.array(billSchema),
-    settings: z.array(settingsSchema),
-  }),
 })

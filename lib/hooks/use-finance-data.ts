@@ -1,87 +1,72 @@
 "use client"
 
-import { useCallback, useEffect } from "react"
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react"
 
-import type {
-  Account,
-  AppSettings,
-  Bill,
-  Category,
-  MonthlyBudget,
-  SavingsGoal,
-  Transaction,
-} from "@/types/finance"
-import { notifyDataChanged } from "@/lib/db/change-events"
-import { getDb } from "@/lib/db/client"
-import { closeCreditCardStatementsIfNeeded } from "@/lib/db/repositories/accounts"
-import { ensureSeedData, createDefaultSettings } from "@/lib/db/seed"
+import {
+  createEmptyFinanceSnapshot,
+  getFinanceSnapshot,
+  type FinanceSnapshot,
+} from "@/lib/db/queries/finance-snapshot"
+import { ensureFinanceMaintenance } from "@/lib/db/maintenance"
 import { useLiveQuery } from "@/lib/hooks/use-live-query"
 
-export interface FinanceSnapshot {
-  accounts: Account[]
-  categories: Category[]
-  transactions: Transaction[]
-  budgets: MonthlyBudget[]
-  goals: SavingsGoal[]
-  bills: Bill[]
-  settings: AppSettings
+export type { FinanceSnapshot }
+
+const emptySnapshot = createEmptyFinanceSnapshot()
+
+interface FinanceDataState {
+  data: FinanceSnapshot
+  error: unknown
+  isLoading: boolean
 }
 
-const emptySnapshot: FinanceSnapshot = {
-  accounts: [],
-  categories: [],
-  transactions: [],
-  budgets: [],
-  goals: [],
-  bills: [],
-  settings: createDefaultSettings(),
+const FinanceDataContext = createContext<FinanceDataState | null>(null)
+
+export function FinanceDataProvider({ children }: { children: ReactNode }) {
+  const [maintenanceError, setMaintenanceError] = useState<unknown>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    void ensureFinanceMaintenance().catch((error: unknown) => {
+      if (isMounted) {
+        setMaintenanceError(error)
+      }
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const query = useCallback(() => getFinanceSnapshot(), [])
+
+  const financeData = useLiveQuery<FinanceSnapshot>(query, emptySnapshot)
+  const value = maintenanceError
+    ? { ...financeData, error: financeData.error ?? maintenanceError }
+    : financeData
+
+  return createElement(
+    FinanceDataContext.Provider,
+    { value },
+    children
+  )
 }
 
 export function useFinanceData() {
-  useEffect(() => {
-    const runMaintenance = async () => {
-      await ensureSeedData()
-      await closeCreditCardStatementsIfNeeded()
-      notifyDataChanged()
-    }
+  const financeData = useContext(FinanceDataContext)
 
-    void runMaintenance()
-  }, [])
+  if (!financeData) {
+    throw new Error("useFinanceData must be used within FinanceDataProvider.")
+  }
 
-  const query = useCallback(async () => {
-    const db = getDb()
-    const [
-      accounts,
-      categories,
-      transactions,
-      budgets,
-      goals,
-      bills,
-      settings,
-    ] = await Promise.all([
-      db.accounts.toArray(),
-      db.categories.toArray(),
-      db.transactions.toArray(),
-      db.budgets.toArray(),
-      db.goals.toArray(),
-      db.bills.toArray(),
-      db.settings.toArray(),
-    ])
-
-    return {
-      accounts: accounts
-        .filter((account) => !account.archived)
-        .sort((a, b) =>
-          (a.displayName ?? a.name).localeCompare(b.displayName ?? b.name)
-        ),
-      categories: categories.sort((a, b) => a.name.localeCompare(b.name)),
-      transactions: transactions.sort((a, b) => b.date.localeCompare(a.date)),
-      budgets,
-      goals: goals.sort((a, b) => a.name.localeCompare(b.name)),
-      bills: bills.sort((a, b) => a.dueDay - b.dueDay),
-      settings: settings[0] ?? createDefaultSettings(),
-    }
-  }, [])
-
-  return useLiveQuery<FinanceSnapshot>(query, emptySnapshot)
+  return financeData
 }
