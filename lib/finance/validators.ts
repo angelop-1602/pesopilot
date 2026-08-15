@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { BUDGET_NAME_MAX_LENGTH } from "@/lib/finance/budgets"
 import { isInputDate } from "@/lib/finance/dates"
 
 export const idSchema = z.string().min(1)
@@ -102,6 +103,7 @@ export const transactionSchema = z
 
 export const budgetSchema = z.object({
   id: idSchema,
+  name: z.string().trim().min(1).max(BUDGET_NAME_MAX_LENGTH).optional(),
   monthId: z.string().regex(/^\d{4}-\d{2}$/),
   categoryId: idSchema,
   limitCentavos: z.number().int().nonnegative(),

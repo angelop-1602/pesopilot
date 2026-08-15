@@ -16,18 +16,39 @@ export function SpendingLimitsPanel({
   categories: Category[]
   monthId: string
 }) {
-  const addBudget = (label: string) => (
-    <BudgetDialog
-      categories={categories}
-      monthId={monthId}
-      trigger={
-        <Button className="rounded-full">
-          <RiAddLine data-icon="inline-start" aria-hidden="true" />
-          {label}
-        </Button>
-      }
-    />
+  const usedCategoryIds = new Set(budgets.map((budget) => budget.categoryId))
+  const availableCategories = categories.filter(
+    (category) => !usedCategoryIds.has(category.id)
   )
+
+  const addBudget = (label: string) => {
+    const trigger = (
+      <Button
+        className="rounded-full"
+        disabled={availableCategories.length === 0}
+        title={
+          availableCategories.length === 0
+            ? "Every expense category already has a budget this month."
+            : undefined
+        }
+      >
+        <RiAddLine data-icon="inline-start" aria-hidden="true" />
+        {label}
+      </Button>
+    )
+
+    if (availableCategories.length === 0) {
+      return trigger
+    }
+
+    return (
+      <BudgetDialog
+        categories={availableCategories}
+        monthId={monthId}
+        trigger={trigger}
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -45,12 +66,17 @@ export function SpendingLimitsPanel({
             const category = categories.find(
               (item) => item.id === budget.categoryId
             )
+            const editableCategories = categories.filter(
+              (item) =>
+                item.id === budget.categoryId ||
+                !usedCategoryIds.has(item.id)
+            )
 
             return (
               <BudgetRow
                 budget={budget}
-                categoryName={category?.name ?? "Category"}
-                categories={categories}
+                categoryName={category?.name ?? "Unknown category"}
+                categories={editableCategories}
                 key={budget.id}
                 monthId={monthId}
               />
