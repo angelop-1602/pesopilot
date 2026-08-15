@@ -20,6 +20,7 @@ export function BudgetDialog({
 }) {
   const [open, setOpen] = useState(false)
   const initialValues: BudgetFormValues = budget ?? {
+    name: "",
     monthId,
     categoryId: categories[0]?.id ?? "",
     limit: "",
@@ -27,7 +28,7 @@ export function BudgetDialog({
 
   return (
     <BottomSheetForm
-      description="Pick a category limit for the selected month."
+      description="Name this budget, then choose its category and monthly limit."
       open={open}
       title={budget ? "Edit budget" : "Add budget"}
       trigger={trigger}

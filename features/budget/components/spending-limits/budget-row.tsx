@@ -10,6 +10,7 @@ import { deleteBudget } from "@/features/budget/services/budget-commands"
 import { ConfirmDialog } from "@/components/shared/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { getBudgetDisplayName } from "@/lib/finance/budgets"
 import { centavosToInput, formatPeso } from "@/lib/finance/currency"
 
 export function BudgetRow({
@@ -23,19 +24,26 @@ export function BudgetRow({
   categories: Category[]
   monthId: string
 }) {
+  const resolvedCategoryName = categoryName.trim() || "Unknown category"
+  const budgetName = getBudgetDisplayName(budget, resolvedCategoryName)
+  const detail = `${formatPeso(budget.remainingCentavos)} remaining`
+
   return (
     <div className="border-b border-border/70 p-4 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{categoryName}</p>
+          <p className="truncate text-sm font-semibold">{budgetName}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {formatPeso(budget.remainingCentavos)} remaining
+            {budgetName === resolvedCategoryName
+              ? detail
+              : `${resolvedCategoryName} · ${detail}`}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <BudgetDialog
             budget={{
               id: budget.id,
+              name: budgetName,
               monthId: budget.monthId,
               categoryId: budget.categoryId,
               limit: centavosToInput(budget.limitCentavos),
@@ -44,7 +52,7 @@ export function BudgetRow({
             monthId={monthId}
             trigger={
               <Button
-                aria-label={`Edit ${categoryName}`}
+                aria-label={`Edit ${budgetName}`}
                 className="rounded-full"
                 size="icon-sm"
                 variant="ghost"
@@ -54,12 +62,12 @@ export function BudgetRow({
             }
           />
           <ConfirmDialog
-            title="Delete budget?"
+            title={`Delete ${budgetName}?`}
             description="This removes the monthly limit only. Transactions stay untouched."
             confirmLabel="Delete"
             trigger={
               <Button
-                aria-label={`Delete ${categoryName}`}
+                aria-label={`Delete ${budgetName}`}
                 className="rounded-full"
                 size="icon-sm"
                 variant="ghost"
@@ -78,7 +86,11 @@ export function BudgetRow({
         <span>{formatPeso(budget.spentCentavos)} spent</span>
         <span>{formatPeso(budget.limitCentavos)} limit</span>
       </div>
-      <Progress className="mt-2" value={budget.progress} />
+      <Progress
+        aria-label={`${budgetName} spending progress`}
+        className="mt-2"
+        value={budget.progress}
+      />
     </div>
   )
 }

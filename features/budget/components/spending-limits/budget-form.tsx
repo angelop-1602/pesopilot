@@ -6,7 +6,13 @@ import { toast } from "sonner"
 import type { Category } from "@/types/finance"
 import type { BudgetFormValues } from "@/features/budget/types/budget-form"
 import { Button } from "@/components/ui/button"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import {
@@ -14,6 +20,10 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select"
 import { saveBudget } from "@/features/budget/services/budget-commands"
+import {
+  BUDGET_NAME_MAX_LENGTH,
+  normalizeBudgetName,
+} from "@/lib/finance/budgets"
 
 export function BudgetForm({
   categories,
@@ -26,6 +36,7 @@ export function BudgetForm({
 }) {
   const [values, setValues] = useState(initialValues)
   const [isSaving, setIsSaving] = useState(false)
+  const [nameError, setNameError] = useState<string>()
 
   const updateValue = <Key extends keyof BudgetFormValues>(
     key: Key,
@@ -34,10 +45,23 @@ export function BudgetForm({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    let name: string
+
+    try {
+      name = normalizeBudgetName(values.name)
+      setNameError(undefined)
+    } catch (error) {
+      setNameError(
+        error instanceof Error ? error.message : "Budget name is required."
+      )
+      return
+    }
+
     setIsSaving(true)
 
     try {
-      await saveBudget(values)
+      await saveBudget({ ...values, name })
       toast.success("Budget saved")
       onSaved()
     } catch (error) {
@@ -50,10 +74,32 @@ export function BudgetForm({
   return (
     <form className="flex flex-col gap-4 pb-1" onSubmit={handleSubmit}>
       <FieldGroup>
+        <Field data-invalid={nameError ? true : undefined}>
+          <FieldLabel htmlFor="budget-name">Budget name</FieldLabel>
+          <Input
+            aria-describedby={nameError ? "budget-name-error" : undefined}
+            aria-invalid={Boolean(nameError)}
+            autoComplete="off"
+            id="budget-name"
+            maxLength={BUDGET_NAME_MAX_LENGTH}
+            placeholder="e.g. Weekly groceries"
+            required
+            value={values.name}
+            onChange={(event) => {
+              updateValue("name", event.target.value)
+              setNameError(undefined)
+            }}
+          />
+          <FieldDescription>
+            Give this spending plan a name you will recognize.
+          </FieldDescription>
+          <FieldError id="budget-name-error">{nameError}</FieldError>
+        </Field>
         <Field>
           <FieldLabel htmlFor="budget-category">Category</FieldLabel>
           <NativeSelect
             id="budget-category"
+            required
             value={values.categoryId}
             onChange={(event) => updateValue("categoryId", event.target.value)}
           >

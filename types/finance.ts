@@ -123,6 +123,8 @@ export interface Transaction extends BaseRecord {
 }
 
 export interface MonthlyBudget extends BaseRecord {
+  // Optional so legacy IndexedDB rows and version-1 backups remain readable.
+  name?: string
   monthId: string
   categoryId: Id
   limitCentavos: number
