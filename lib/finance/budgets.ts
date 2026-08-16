@@ -25,13 +25,12 @@ export function getBudgetDisplayName(
   return budget.name?.trim() || categoryName?.trim() || "Untitled budget"
 }
 
-export function assertBudgetCategoryAvailable(
-  currentBudgetId?: string,
-  matchingBudgetId?: string
+export function compareBudgetsByAge(
+  left: Pick<MonthlyBudget, "createdAt" | "id">,
+  right: Pick<MonthlyBudget, "createdAt" | "id">
 ) {
-  if (matchingBudgetId && matchingBudgetId !== currentBudgetId) {
-    throw new Error(
-      "This category already has a budget for the selected month."
-    )
-  }
+  return (
+    left.createdAt.localeCompare(right.createdAt) ||
+    left.id.localeCompare(right.id)
+  )
 }

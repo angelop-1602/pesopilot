@@ -3,15 +3,11 @@ import type { MonthlyBudget } from "@/types/finance"
 import { notifyDataChanged } from "@/lib/db/change-events"
 import { createId, nowIso } from "@/lib/db/client"
 import {
-  deleteBudgetRecord,
-  findBudgetRecordByMonthCategory,
   getBudgetRecord,
   putBudgetRecord,
 } from "@/lib/db/repositories/budgets"
-import {
-  assertBudgetCategoryAvailable,
-  normalizeBudgetName,
-} from "@/lib/finance/budgets"
+import { deleteUnusedBudget } from "@/lib/db/services/budget-writes"
+import { normalizeBudgetName } from "@/lib/finance/budgets"
 import { pesosToCentavos } from "@/lib/finance/currency"
 
 export async function saveBudget(values: BudgetFormValues) {
@@ -23,13 +19,11 @@ export async function saveBudget(values: BudgetFormValues) {
 
   const now = nowIso()
   const existing = values.id ? await getBudgetRecord(values.id) : undefined
-  const duplicate = await findBudgetRecordByMonthCategory(
-    values.monthId,
-    values.categoryId
-  )
   const limitCentavos = pesosToCentavos(values.limit)
 
-  assertBudgetCategoryAvailable(existing?.id, duplicate?.id)
+  if (existing && existing.categoryId !== values.categoryId) {
+    throw new Error("A saved budget's category cannot be changed.")
+  }
 
   if (limitCentavos < 0) {
     throw new Error("Budget limit cannot be negative.")
@@ -51,6 +45,6 @@ export async function saveBudget(values: BudgetFormValues) {
 }
 
 export async function deleteBudget(id: string) {
-  await deleteBudgetRecord(id)
+  await deleteUnusedBudget(id)
   notifyDataChanged()
 }

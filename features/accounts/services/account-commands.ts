@@ -2,12 +2,13 @@ import type { AccountFormValues } from "@/features/accounts/types/account-form"
 import { notifyDataChanged } from "@/lib/db/change-events"
 import { createId, nowIso } from "@/lib/db/client"
 import {
-  deleteAccountRecord,
   getAccount,
   updateAccount,
 } from "@/lib/db/repositories/accounts"
-import { countAccountTransactionReferences } from "@/lib/db/repositories/transactions"
-import { saveAccountWithBalanceSync } from "@/lib/db/services/account-write-service"
+import {
+  deleteOrArchiveAccountWithAttachments,
+  saveAccountWithBalanceSync,
+} from "@/lib/db/services/account-write-service"
 import { buildAccountRecord } from "@/lib/finance/account-record"
 import { pesosToCentavos } from "@/lib/finance/currency"
 
@@ -51,14 +52,5 @@ export async function restoreAccount(id: string) {
 }
 
 export async function deleteAccount(id: string) {
-  const transactionCount = await countAccountTransactionReferences(id)
-
-  if (transactionCount > 0) {
-    await archiveAccount(id)
-    return "archived" as const
-  }
-
-  await deleteAccountRecord(id)
-  notifyDataChanged()
-  return "deleted" as const
+  return deleteOrArchiveAccountWithAttachments(id)
 }

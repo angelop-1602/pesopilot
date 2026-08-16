@@ -80,8 +80,8 @@ export function BackupCard() {
       <CardHeader>
         <CardTitle>Backup</CardTitle>
         <CardDescription>
-          Keep an encrypted copy outside the app storage, then restore it when
-          needed.
+          Keep an encrypted copy of your finance records and locally saved
+          images outside the app storage, then restore it when needed.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -96,7 +96,8 @@ export function BackupCard() {
                   Automatic encrypted backup
                 </div>
                 <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Writes an encrypted .ppbackup file to a local file you choose.
+                  Writes records and images to an encrypted .ppbackup file you
+                  choose.
                 </div>
               </div>
             </div>
@@ -162,7 +163,8 @@ export function BackupCard() {
           <div>
             <div className="text-sm font-medium">Manual backup</div>
             <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Export an encrypted copy or restore one you already have.
+              Export an encrypted copy—including saved images—or restore one
+              you already have.
             </div>
           </div>
           <div className="flex flex-wrap gap-2">

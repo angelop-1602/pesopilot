@@ -44,7 +44,9 @@ export function FinancialActivityWorkspace() {
           <TransactionDialog
             accounts={data.accounts}
             bills={data.bills}
+            budgets={data.budgets}
             categories={data.categories}
+            transactions={data.transactions}
             trigger={
               <Button className="rounded-full">
                 <RiAddLine data-icon="inline-start" aria-hidden="true" />
@@ -68,6 +70,7 @@ export function FinancialActivityWorkspace() {
           <TransactionsPanel
             accounts={data.accounts}
             bills={data.bills}
+            budgets={data.budgets}
             categories={data.categories}
             filter={filter}
             transactions={visibleTransactions}
@@ -78,8 +81,10 @@ export function FinancialActivityWorkspace() {
           <BillsPanel
             accounts={data.accounts}
             bills={data.bills}
+            budgets={data.budgets}
             categories={data.categories}
             occurrences={billOccurrences}
+            transactions={data.transactions}
           />
         </TabsContent>
       </Tabs>

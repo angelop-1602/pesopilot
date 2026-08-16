@@ -57,7 +57,6 @@ export function InstitutionLogo({
           alt=""
           className="size-full object-contain p-1.5"
           height={pixelSize}
-          priority={false}
           src={logoAsset}
           width={pixelSize}
           onError={() => setAssetFailed(true)}

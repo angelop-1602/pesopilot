@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
-import type { Category } from "@/types/finance"
+import type { Category, MonthlyBudget } from "@/types/finance"
 import type { BudgetFormValues } from "@/features/budget/types/budget-form"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,7 +32,7 @@ export function BudgetForm({
 }: {
   categories: Category[]
   initialValues: BudgetFormValues
-  onSaved: () => void
+  onSaved: (budget: MonthlyBudget) => void
 }) {
   const [values, setValues] = useState(initialValues)
   const [isSaving, setIsSaving] = useState(false)
@@ -61,9 +61,9 @@ export function BudgetForm({
     setIsSaving(true)
 
     try {
-      await saveBudget({ ...values, name })
+      const budget = await saveBudget({ ...values, name })
       toast.success("Budget saved")
-      onSaved()
+      onSaved(budget)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save.")
     } finally {
@@ -98,6 +98,7 @@ export function BudgetForm({
         <Field>
           <FieldLabel htmlFor="budget-category">Category</FieldLabel>
           <NativeSelect
+            disabled={Boolean(initialValues.id)}
             id="budget-category"
             required
             value={values.categoryId}
@@ -109,6 +110,11 @@ export function BudgetForm({
               </NativeSelectOption>
             ))}
           </NativeSelect>
+          <FieldDescription>
+            {initialValues.id
+              ? "The category stays fixed so linked expenses remain accurate."
+              : "The same category can be shared by multiple named budgets."}
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="budget-limit">Monthly limit</FieldLabel>

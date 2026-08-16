@@ -67,6 +67,22 @@ export type BillOccurrenceStatus = "paid" | "pending" | "overdue"
 
 export type GoalStatus = "active" | "paused" | "completed"
 
+export type AttachmentOwnerType =
+  | "account"
+  | "transaction"
+  | "bill"
+  | "goal"
+  | "profile"
+
+export type AttachmentPurpose =
+  | "receipt"
+  | "payment_proof"
+  | "bill_document"
+  | "account_image"
+  | "goal_cover"
+  | "profile_image"
+  | "other"
+
 export interface BaseRecord {
   id: Id
   createdAt: string
@@ -115,6 +131,8 @@ export interface Transaction extends BaseRecord {
   accountId: Id
   transferAccountId?: Id
   categoryId?: Id
+  // Optional so legacy transactions and version-1 backups remain readable.
+  budgetId?: Id
   billId?: Id
   billOccurrenceDate?: string
   date: string
@@ -181,4 +199,23 @@ export interface AppSettings extends BaseRecord {
   timezone: "Asia/Manila"
   budgetMethod: BudgetMethod
   showInstallTips: boolean
+}
+
+export interface AttachmentMetadata extends BaseRecord {
+  ownerType: AttachmentOwnerType
+  ownerId: Id
+  purpose: AttachmentPurpose
+  fileName: string
+  mimeType: string
+  sizeBytes: number
+  width: number
+  height: number
+  thumbnailBlob: Blob
+  thumbnailMimeType: string
+  thumbnailSizeBytes: number
+}
+
+export interface AttachmentContent {
+  attachmentId: Id
+  blob: Blob
 }

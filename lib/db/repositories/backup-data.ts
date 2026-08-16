@@ -1,7 +1,16 @@
-import type { FinanceBackup } from "@/lib/backup/types"
+import type {
+  AttachmentContent,
+  AttachmentMetadata,
+} from "@/types/finance"
+import type { FinanceBackupDataV1 } from "@/lib/backup/types"
 import { getDb } from "@/lib/db/client"
 
-export async function readBackupData(): Promise<FinanceBackup["data"]> {
+export interface RuntimeBackupData extends FinanceBackupDataV1 {
+  attachments: AttachmentMetadata[]
+  attachmentContents: AttachmentContent[]
+}
+
+export async function readBackupData(): Promise<RuntimeBackupData> {
   const db = getDb()
 
   return db.transaction(
@@ -14,6 +23,8 @@ export async function readBackupData(): Promise<FinanceBackup["data"]> {
       db.goals,
       db.bills,
       db.settings,
+      db.attachments,
+      db.attachmentContents,
     ],
     async () => {
       const [
@@ -24,6 +35,8 @@ export async function readBackupData(): Promise<FinanceBackup["data"]> {
         goals,
         bills,
         settings,
+        attachments,
+        attachmentContents,
       ] = await Promise.all([
         db.accounts.toArray(),
         db.categories.toArray(),
@@ -32,6 +45,8 @@ export async function readBackupData(): Promise<FinanceBackup["data"]> {
         db.goals.toArray(),
         db.bills.toArray(),
         db.settings.toArray(),
+        db.attachments.toArray(),
+        db.attachmentContents.toArray(),
       ])
 
       return {
@@ -42,12 +57,14 @@ export async function readBackupData(): Promise<FinanceBackup["data"]> {
         goals,
         bills,
         settings,
+        attachments,
+        attachmentContents,
       }
     }
   )
 }
 
-export async function replaceBackupData(data: FinanceBackup["data"]) {
+export async function replaceBackupData(data: RuntimeBackupData) {
   const db = getDb()
 
   await db.transaction(
@@ -60,6 +77,8 @@ export async function replaceBackupData(data: FinanceBackup["data"]) {
       db.goals,
       db.bills,
       db.settings,
+      db.attachments,
+      db.attachmentContents,
     ],
     async () => {
       await Promise.all([
@@ -70,6 +89,8 @@ export async function replaceBackupData(data: FinanceBackup["data"]) {
         db.goals.clear(),
         db.bills.clear(),
         db.settings.clear(),
+        db.attachments.clear(),
+        db.attachmentContents.clear(),
       ])
 
       await Promise.all([
@@ -80,6 +101,8 @@ export async function replaceBackupData(data: FinanceBackup["data"]) {
         db.goals.bulkPut(data.goals),
         db.bills.bulkPut(data.bills),
         db.settings.bulkPut(data.settings),
+        db.attachments.bulkPut(data.attachments),
+        db.attachmentContents.bulkPut(data.attachmentContents),
       ])
     }
   )
@@ -99,6 +122,8 @@ export async function clearLocalData() {
       db.bills,
       db.settings,
       db.automaticBackups,
+      db.attachments,
+      db.attachmentContents,
     ],
     async () => {
       await Promise.all([
@@ -110,6 +135,8 @@ export async function clearLocalData() {
         db.bills.clear(),
         db.settings.clear(),
         db.automaticBackups.clear(),
+        db.attachments.clear(),
+        db.attachmentContents.clear(),
       ])
     }
   )

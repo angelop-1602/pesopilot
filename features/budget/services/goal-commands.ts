@@ -3,10 +3,10 @@ import type { SavingsGoal } from "@/types/finance"
 import { notifyDataChanged } from "@/lib/db/change-events"
 import { createId, nowIso } from "@/lib/db/client"
 import {
-  deleteGoalRecord,
   getGoalRecord,
   putGoalRecord,
 } from "@/lib/db/repositories/goals"
+import { deleteGoalWithAttachments } from "@/lib/db/services/goal-writes"
 import { pesosToCentavos } from "@/lib/finance/currency"
 
 export async function saveGoal(values: GoalFormValues) {
@@ -41,6 +41,6 @@ export async function saveGoal(values: GoalFormValues) {
 }
 
 export async function deleteGoal(id: string) {
-  await deleteGoalRecord(id)
+  await deleteGoalWithAttachments(id)
   notifyDataChanged()
 }

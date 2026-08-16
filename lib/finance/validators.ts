@@ -81,6 +81,7 @@ export const transactionSchema = z
     accountId: idSchema,
     transferAccountId: z.string().optional(),
     categoryId: z.string().optional(),
+    budgetId: z.string().optional(),
     billId: z.string().optional(),
     billOccurrenceDate: z
       .string()

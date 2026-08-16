@@ -125,8 +125,7 @@ function assignBillPayments(
     .filter(
       (transaction) =>
         transaction.type === "expense" &&
-        transaction.billId === bill.id &&
-        transactionCountsInMonth(transaction, monthId)
+        transaction.billId === bill.id
     )
     .sort(
       (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)
@@ -136,7 +135,7 @@ function assignBillPayments(
   for (const payment of payments) {
     if (payment.billOccurrenceDate) {
       paymentsByDueDate.get(payment.billOccurrenceDate)?.push(payment)
-    } else {
+    } else if (transactionCountsInMonth(payment, monthId)) {
       untaggedPayments.push(payment)
     }
   }

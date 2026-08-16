@@ -13,6 +13,7 @@ import {
   archiveAccount,
   deleteAccount,
 } from "@/features/accounts/services/account-commands"
+import { LocalAttachmentImage } from "@/features/attachments"
 import { InstitutionLogo } from "@/components/shared/institution-logo"
 import { ConfirmDialog } from "@/components/shared/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -42,13 +43,25 @@ export function AccountRow({ account }: { account: Account }) {
 
   return (
     <div className="flex items-start gap-3 border-b border-border/70 px-4 py-3 last:border-b-0">
-      <InstitutionLogo
-        color={color}
-        institutionKey={account.institutionKey}
-        logoAsset={institution.logoAsset}
-        logoText={institution.logoText}
-        size="lg"
-        textColor={institution.textColor}
+      <LocalAttachmentImage
+        alt={`${account.displayName} custom image`}
+        className="size-12 shrink-0 rounded-full object-cover"
+        fallback={
+          <InstitutionLogo
+            color={color}
+            institutionKey={account.institutionKey}
+            logoAsset={institution.logoAsset}
+            logoText={institution.logoText}
+            size="lg"
+            textColor={institution.textColor}
+          />
+        }
+        height={48}
+        ownerId={account.id}
+        ownerType="account"
+        purpose="account_image"
+        sizes="48px"
+        width={48}
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

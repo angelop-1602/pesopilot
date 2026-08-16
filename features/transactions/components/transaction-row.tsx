@@ -3,12 +3,19 @@
 import { RiDeleteBinLine, RiEditLine } from "@remixicon/react"
 import { toast } from "sonner"
 
-import type { Account, Bill, Category, Transaction } from "@/types/finance"
+import type {
+  Account,
+  Bill,
+  Category,
+  MonthlyBudget,
+  Transaction,
+} from "@/types/finance"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { ConfirmDialog } from "@/components/shared/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { deleteTransaction } from "@/features/transactions/services/transaction-commands"
+import { getBudgetDisplayName } from "@/lib/finance/budgets"
 import { formatPeso } from "@/lib/finance/currency"
 import { formatShortDate } from "@/lib/finance/dates"
 import { cn } from "@/lib/utils"
@@ -16,21 +23,26 @@ import { cn } from "@/lib/utils"
 interface TransactionRowProps {
   accounts: Account[]
   bills: Bill[]
+  budgets: MonthlyBudget[]
   categories: Category[]
   transaction: Transaction
+  transactions: Transaction[]
 }
 
 export function TransactionRow({
   accounts,
   bills,
+  budgets,
   categories,
   transaction,
+  transactions,
 }: TransactionRowProps) {
   const account = accounts.find((item) => item.id === transaction.accountId)
   const transferAccount = accounts.find(
     (item) => item.id === transaction.transferAccountId
   )
   const category = categories.find((item) => item.id === transaction.categoryId)
+  const budget = budgets.find((item) => item.id === transaction.budgetId)
   const amountPrefix =
     transaction.type === "income"
       ? "+"
@@ -40,7 +52,7 @@ export function TransactionRow({
   const detail =
     transaction.type === "transfer"
       ? `${account?.displayName ?? "Account"} to ${transferAccount?.displayName ?? "Account"}`
-      : `${account?.displayName ?? "Account"}${category ? ` - ${category.name}` : ""}`
+      : `${account?.displayName ?? "Account"}${category ? ` - ${category.name}` : ""}${budget ? ` / ${getBudgetDisplayName(budget, category?.name)}` : ""}`
 
   return (
     <div className="flex items-center gap-3 border-b border-border/70 px-4 py-3 last:border-b-0">
@@ -60,8 +72,10 @@ export function TransactionRow({
           <TransactionDialog
             accounts={accounts}
             bills={bills}
+            budgets={budgets}
             categories={categories}
             transaction={transaction}
+            transactions={transactions}
             trigger={
               <Button
                 aria-label={`Edit ${transaction.description}`}

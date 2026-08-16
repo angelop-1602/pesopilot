@@ -83,7 +83,8 @@ export function EnableAutomaticBackupDialog({
         <DialogHeader>
           <DialogTitle>Enable automatic backup</DialogTitle>
           <DialogDescription>
-            Choose a backup file and protect it with a password.
+            Choose a backup file for your records and saved images, then
+            protect it with a password.
           </DialogDescription>
         </DialogHeader>
         <PasswordFields

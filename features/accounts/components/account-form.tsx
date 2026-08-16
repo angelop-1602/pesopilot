@@ -10,6 +10,10 @@ import type {
 import { InstitutionCombobox } from "@/features/accounts/components/institution-combobox"
 import { saveAccount } from "@/features/accounts/services/account-commands"
 import type { AccountFormValues } from "@/features/accounts/types/account-form"
+import {
+  AttachmentField,
+  type PreparedImageAttachment,
+} from "@/features/attachments"
 import { inputToNumber } from "@/features/accounts/utils/account-form-values"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,6 +37,7 @@ import {
   getInstitution,
   isAccountProductAllowed,
 } from "@/lib/constants/institutions"
+import { savePreparedAttachments } from "@/lib/db/services/attachment-writes"
 
 interface AccountFormProps {
   initialValues: AccountFormValues
@@ -46,6 +51,9 @@ export function AccountForm({
   onSaved,
 }: AccountFormProps) {
   const [values, setValues] = useState(initialValues)
+  const [attachmentDrafts, setAttachmentDrafts] = useState<
+    PreparedImageAttachment[]
+  >([])
   const [isSaving, setIsSaving] = useState(false)
   const institution = getInstitution(values.institutionKey)
   const selectedProduct = getAccountProduct(values.accountProductType)
@@ -130,7 +138,17 @@ export function AccountForm({
     setIsSaving(true)
 
     try {
-      await saveAccount({ ...values, allowOverLimit: shouldSaveOverLimit })
+      const account = await saveAccount({
+        ...values,
+        allowOverLimit: shouldSaveOverLimit,
+      })
+      await savePreparedAttachments({
+        ownerType: "account",
+        ownerId: account.id,
+        purpose: "account_image",
+        prepared: attachmentDrafts,
+      })
+      setAttachmentDrafts([])
       toast.success("Account saved")
       onSaved()
     } catch (error) {
@@ -168,6 +186,17 @@ export function AccountForm({
           </NativeSelect>
           <FieldDescription>{selectedProduct.description}</FieldDescription>
         </Field>
+        <AttachmentField
+          description="Optional custom image for this account or card. The built-in institution logo remains the fallback."
+          disabled={isSaving}
+          id="account-image"
+          label="Custom image"
+          ownerId={initialValues.id}
+          ownerType="account"
+          purpose="account_image"
+          value={attachmentDrafts}
+          onChange={setAttachmentDrafts}
+        />
         {isCreditCard && (
           <Field>
             <FieldLabel htmlFor="account-credit-limit">Credit Limit</FieldLabel>

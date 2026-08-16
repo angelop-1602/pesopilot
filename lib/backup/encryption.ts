@@ -1,15 +1,15 @@
-import type { FinanceBackup } from "@/lib/backup/types"
+import type { LegacyFinanceBackup } from "@/lib/backup/types"
 
 const ENCRYPTED_BACKUP_KIND = "encrypted-backup"
-const ENCRYPTED_BACKUP_VERSION = 1
+const LEGACY_ENCRYPTED_BACKUP_VERSION = 1
+const ARCHIVE_ENCRYPTED_BACKUP_VERSION = 2
 const KDF_ITERATIONS = 250000
 const SALT_BYTES = 16
 const IV_BYTES = 12
 
-export interface EncryptedBackupEnvelope {
+interface EncryptedBackupEnvelopeBase {
   app: "PesoPilot"
   kind: typeof ENCRYPTED_BACKUP_KIND
-  version: typeof ENCRYPTED_BACKUP_VERSION
   exportedAt: string
   kdf: {
     name: "PBKDF2"
@@ -24,6 +24,25 @@ export interface EncryptedBackupEnvelope {
   payload: string
 }
 
+export interface LegacyEncryptedBackupEnvelope
+  extends EncryptedBackupEnvelopeBase {
+  version: typeof LEGACY_ENCRYPTED_BACKUP_VERSION
+}
+
+export interface ArchiveEncryptedBackupEnvelope
+  extends EncryptedBackupEnvelopeBase {
+  version: typeof ARCHIVE_ENCRYPTED_BACKUP_VERSION
+  format: "zip"
+}
+
+export type EncryptedBackupEnvelope =
+  | LegacyEncryptedBackupEnvelope
+  | ArchiveEncryptedBackupEnvelope
+
+export type DecryptedBackupPayload =
+  | { format: "json"; value: unknown }
+  | { format: "zip"; value: Uint8Array }
+
 export function isEncryptedBackupEnvelope(
   input: unknown
 ): input is EncryptedBackupEnvelope {
@@ -36,13 +55,15 @@ export function isEncryptedBackupEnvelope(
   return (
     record.app === "PesoPilot" &&
     record.kind === ENCRYPTED_BACKUP_KIND &&
-    record.version === ENCRYPTED_BACKUP_VERSION &&
+    (record.version === LEGACY_ENCRYPTED_BACKUP_VERSION ||
+      (record.version === ARCHIVE_ENCRYPTED_BACKUP_VERSION &&
+        record.format === "zip")) &&
     typeof record.exportedAt === "string" &&
     typeof record.payload === "string" &&
     isRecord(record.kdf) &&
     record.kdf.name === "PBKDF2" &&
     record.kdf.hash === "SHA-256" &&
-    typeof record.kdf.iterations === "number" &&
+    record.kdf.iterations === KDF_ITERATIONS &&
     typeof record.kdf.salt === "string" &&
     isRecord(record.cipher) &&
     record.cipher.name === "AES-GCM" &&
@@ -51,7 +72,69 @@ export function isEncryptedBackupEnvelope(
 }
 
 export async function encryptBackup(
-  backup: FinanceBackup,
+  backup: LegacyFinanceBackup,
+  password: string
+): Promise<EncryptedBackupEnvelope> {
+  const encodedBackup = new TextEncoder().encode(JSON.stringify(backup))
+
+  return encryptBytes(
+    encodedBackup,
+    backup.exportedAt,
+    LEGACY_ENCRYPTED_BACKUP_VERSION,
+    password
+  )
+}
+
+export function encryptBackupArchive(
+  archive: Uint8Array,
+  exportedAt: string,
+  password: string
+) {
+  return encryptBytes(
+    archive,
+    exportedAt,
+    ARCHIVE_ENCRYPTED_BACKUP_VERSION,
+    password
+  )
+}
+
+export async function decryptBackup(
+  envelope: EncryptedBackupEnvelope,
+  password: string
+): Promise<unknown> {
+  const payload = await decryptBackupPayload(envelope, password)
+
+  if (payload.format !== "json") {
+    throw new Error("This backup contains an archive instead of JSON data.")
+  }
+
+  return payload.value
+}
+
+export async function decryptBackupPayload(
+  envelope: EncryptedBackupEnvelope,
+  password: string
+): Promise<DecryptedBackupPayload> {
+  const decrypted = await decryptBytes(envelope, password)
+
+  if (envelope.version === ARCHIVE_ENCRYPTED_BACKUP_VERSION) {
+    return { format: "zip", value: decrypted }
+  }
+
+  try {
+    return {
+      format: "json",
+      value: JSON.parse(new TextDecoder().decode(decrypted)) as unknown,
+    }
+  } catch {
+    throw new Error("Decrypted backup is not valid JSON.")
+  }
+}
+
+async function encryptBytes(
+  bytes: Uint8Array,
+  exportedAt: string,
+  version: 1 | 2,
   password: string
 ): Promise<EncryptedBackupEnvelope> {
   assertBackupPassword(password)
@@ -60,18 +143,16 @@ export async function encryptBackup(
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES))
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES))
   const key = await deriveKey(password, salt)
-  const encodedBackup = new TextEncoder().encode(JSON.stringify(backup))
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv: toArrayBuffer(iv) },
     key,
-    toArrayBuffer(encodedBackup)
+    toArrayBuffer(bytes)
   )
 
-  return {
+  const base: EncryptedBackupEnvelopeBase = {
     app: "PesoPilot",
     kind: ENCRYPTED_BACKUP_KIND,
-    version: ENCRYPTED_BACKUP_VERSION,
-    exportedAt: backup.exportedAt,
+    exportedAt,
     kdf: {
       name: "PBKDF2",
       hash: "SHA-256",
@@ -84,12 +165,16 @@ export async function encryptBackup(
     },
     payload: bytesToBase64(new Uint8Array(encrypted)),
   }
+
+  return version === ARCHIVE_ENCRYPTED_BACKUP_VERSION
+    ? { ...base, version, format: "zip" }
+    : { ...base, version }
 }
 
-export async function decryptBackup(
+async function decryptBytes(
   envelope: EncryptedBackupEnvelope,
   password: string
-): Promise<FinanceBackup> {
+) {
   assertBackupPassword(password)
 
   try {
@@ -102,9 +187,7 @@ export async function decryptBackup(
       key,
       toArrayBuffer(base64ToBytes(envelope.payload))
     )
-    const text = new TextDecoder().decode(decrypted)
-
-    return JSON.parse(text) as FinanceBackup
+    return new Uint8Array(decrypted)
   } catch {
     throw new Error("Unable to decrypt backup. Check the backup password.")
   }

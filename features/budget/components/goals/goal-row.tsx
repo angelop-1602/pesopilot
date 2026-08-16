@@ -1,9 +1,10 @@
 "use client"
 
-import { RiDeleteBinLine, RiEditLine } from "@remixicon/react"
+import { RiDeleteBinLine, RiEditLine, RiFlagLine } from "@remixicon/react"
 import { toast } from "sonner"
 
 import type { Account, SavingsGoal } from "@/types/finance"
+import { LocalAttachmentImage } from "@/features/attachments"
 import { GoalDialog } from "@/features/budget/components/goals/goal-dialog"
 import { deleteGoal } from "@/features/budget/services/goal-commands"
 import { ConfirmDialog } from "@/components/shared/confirm-dialog"
@@ -23,16 +24,32 @@ export function GoalRow({
   const progress = getGoalProgress(goal)
 
   return (
-    <div className="border-b border-border/70 p-4 last:border-b-0">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{goal.name}</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {formatPeso(goal.currentCentavos)} of{" "}
-            {formatPeso(goal.targetCentavos)}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
+    <div className="flex items-start gap-3 border-b border-border/70 p-4 last:border-b-0">
+      <LocalAttachmentImage
+        alt={`${goal.name} cover`}
+        className="size-10 shrink-0 rounded-full object-cover"
+        fallback={
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700">
+            <RiFlagLine className="size-5" aria-hidden="true" />
+          </span>
+        }
+        height={40}
+        ownerId={goal.id}
+        ownerType="goal"
+        purpose="goal_cover"
+        sizes="40px"
+        width={40}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{goal.name}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {formatPeso(goal.currentCentavos)} of{" "}
+              {formatPeso(goal.targetCentavos)}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
           <GoalDialog
             accounts={accounts}
             goal={goal}
@@ -66,17 +83,18 @@ export function GoalRow({
               toast.success("Goal deleted")
             }}
           />
+          </div>
         </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <Badge className="capitalize" variant="secondary">
+            {goal.status}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {Math.round(progress)}%
+          </span>
+        </div>
+        <Progress className="mt-2" value={progress} />
       </div>
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <Badge className="capitalize" variant="secondary">
-          {goal.status}
-        </Badge>
-        <span className="text-xs text-muted-foreground">
-          {Math.round(progress)}%
-        </span>
-      </div>
-      <Progress className="mt-2" value={progress} />
     </div>
   )
 }

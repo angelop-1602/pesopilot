@@ -3,6 +3,8 @@ import Dexie, { type EntityTable } from "dexie"
 import type {
   Account,
   AppSettings,
+  AttachmentContent,
+  AttachmentMetadata,
   Bill,
   Category,
   MonthlyBudget,
@@ -20,6 +22,8 @@ export class PesoPilotDatabase extends Dexie {
   bills!: EntityTable<Bill, "id">
   settings!: EntityTable<AppSettings, "id">
   automaticBackups!: EntityTable<AutomaticBackupTarget, "id">
+  attachments!: EntityTable<AttachmentMetadata, "id">
+  attachmentContents!: EntityTable<AttachmentContent, "attachmentId">
 
   constructor() {
     super("pesopilot")
@@ -58,6 +62,35 @@ export class PesoPilotDatabase extends Dexie {
       bills: "id, dueDay, active, categoryId, accountId",
       settings: "id",
       automaticBackups: "id, enabled, updatedAt",
+    })
+
+    this.version(4).stores({
+      accounts:
+        "id, type, institutionKey, institutionCategory, accountProductType, balanceNature, archived, createdAt",
+      categories: "id, kind, system",
+      transactions:
+        "id, date, type, accountId, transferAccountId, categoryId, budgetId, billId",
+      budgets: "id, monthId, categoryId, [monthId+categoryId]",
+      goals: "id, status, targetDate",
+      bills: "id, dueDay, active, categoryId, accountId",
+      settings: "id",
+      automaticBackups: "id, enabled, updatedAt",
+    })
+
+    this.version(5).stores({
+      accounts:
+        "id, type, institutionKey, institutionCategory, accountProductType, balanceNature, archived, createdAt",
+      categories: "id, kind, system",
+      transactions:
+        "id, date, type, accountId, transferAccountId, categoryId, budgetId, billId",
+      budgets: "id, monthId, categoryId, [monthId+categoryId]",
+      goals: "id, status, targetDate",
+      bills: "id, dueDay, active, categoryId, accountId",
+      settings: "id",
+      automaticBackups: "id, enabled, updatedAt",
+      attachments:
+        "id, ownerType, [ownerType+ownerId], [ownerType+ownerId+purpose], createdAt",
+      attachmentContents: "attachmentId",
     })
   }
 }

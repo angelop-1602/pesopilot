@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import {
   RiBillLine,
   RiCalendarCheckLine,
@@ -13,30 +12,34 @@ import type {
   Account,
   BillOccurrence,
   Category,
+  MonthlyBudget,
+  Transaction,
 } from "@/types/finance"
 import { BillDialog } from "@/features/bills/components/bill-dialog"
+import { getBillPaymentFormValues } from "@/features/bills/utils/bill-payment-form-values"
+import { TransactionDialog } from "@/features/transactions"
 import { ConfirmDialog } from "@/components/shared/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  deleteBill,
-  markBillPaid,
-} from "@/features/bills/services/bill-commands"
+import { deleteBill } from "@/features/bills/services/bill-commands"
 import { formatPeso } from "@/lib/finance/currency"
 import { formatShortDate } from "@/lib/finance/dates"
 
 interface BillRowProps {
   accounts: Account[]
+  budgets: MonthlyBudget[]
   categories: Category[]
   occurrence: BillOccurrence
+  transactions: Transaction[]
 }
 
 export function BillRow({
   accounts,
+  budgets,
   categories,
   occurrence,
+  transactions,
 }: BillRowProps) {
-  const [isMarkingPaid, setIsMarkingPaid] = useState(false)
   const { bill, dueDate, status } = occurrence
   const account = accounts.find((item) => item.id === bill.accountId)
   const category = categories.find((item) => item.id === bill.categoryId)
@@ -116,27 +119,43 @@ export function BillRow({
           {formatPeso(bill.amountCentavos)}
         </p>
       </div>
-      <Button
-        className="mt-3 w-full rounded-full"
-        disabled={!bill.accountId || isPaid || isMarkingPaid}
-        variant="outline"
-        onClick={async () => {
-          setIsMarkingPaid(true)
-          try {
-            await markBillPaid(bill, dueDate)
-            toast.success("Bill marked paid")
-          } catch (error) {
-            toast.error(
-              error instanceof Error ? error.message : "Unable to mark paid."
-            )
-          } finally {
-            setIsMarkingPaid(false)
+      {isPaid ? (
+        <Button
+          className="mt-3 w-full rounded-full"
+          disabled
+          variant="outline"
+        >
+          <RiCalendarCheckLine data-icon="inline-start" aria-hidden="true" />
+          Paid {formatPeso(occurrence.paidAmountCentavos)}
+        </Button>
+      ) : (
+        <TransactionDialog
+          accounts={accounts}
+          bills={[bill]}
+          budgets={budgets}
+          categories={categories}
+          description="Review the actual amount, account, budget, payment date, and notes before saving."
+          initialValues={getBillPaymentFormValues(
+            bill,
+            dueDate,
+            accounts,
+            budgets
+          )}
+          lockedBillId={bill.id}
+          lockedType
+          title={`Pay ${bill.name}`}
+          transactions={transactions}
+          trigger={
+            <Button className="mt-3 w-full rounded-full" variant="outline">
+              <RiCalendarCheckLine
+                data-icon="inline-start"
+                aria-hidden="true"
+              />
+              Pay bill
+            </Button>
           }
-        }}
-      >
-        <RiCalendarCheckLine data-icon="inline-start" aria-hidden="true" />
-        {isPaid ? "Paid" : isMarkingPaid ? "Marking paid..." : "Mark paid"}
-      </Button>
+        />
+      )}
     </div>
   )
 }

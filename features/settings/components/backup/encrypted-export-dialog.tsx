@@ -77,7 +77,8 @@ export function EncryptedExportDialog() {
         <DialogHeader>
           <DialogTitle>Export encrypted backup</DialogTitle>
           <DialogDescription>
-            This creates a password-protected .ppbackup file.
+            This creates a password-protected .ppbackup file with your records
+            and locally saved images.
           </DialogDescription>
         </DialogHeader>
         <PasswordFields

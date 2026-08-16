@@ -13,8 +13,11 @@ export function downloadBlob(blob: Blob, filename: string) {
 
   anchor.href = url
   anchor.download = filename
+  anchor.hidden = true
+  document.body.append(anchor)
   anchor.click()
-  URL.revokeObjectURL(url)
+  anchor.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
 export function formatBackupTimestamp(value?: string) {

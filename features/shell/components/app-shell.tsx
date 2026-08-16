@@ -40,7 +40,9 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
           <TransactionDialog
             accounts={data.accounts}
             bills={data.bills}
+            budgets={data.budgets}
             categories={data.categories}
+            transactions={data.transactions}
             trigger={trigger}
           />
         )}

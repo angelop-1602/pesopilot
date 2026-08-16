@@ -1,5 +1,6 @@
 import { notifyDataChanged } from "@/lib/db/change-events"
 import { closeCreditCardStatementsIfNeeded } from "@/lib/db/account-maintenance"
+import { cleanupOrphanAttachments } from "@/lib/db/attachment-maintenance"
 import { ensureSeedData } from "@/lib/db/seed"
 
 let maintenanceComplete = false
@@ -8,6 +9,7 @@ let maintenancePromise: Promise<void> | undefined
 export async function runFinanceMaintenance() {
   await ensureSeedData()
   await closeCreditCardStatementsIfNeeded()
+  await cleanupOrphanAttachments()
   notifyDataChanged()
 }
 

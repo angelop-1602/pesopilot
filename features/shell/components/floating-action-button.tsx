@@ -9,7 +9,7 @@ export function FloatingActionButton({
   renderDialog: (trigger: ReactElement) => ReactNode
 }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+2.75rem)] z-40 overflow-x-clip px-1.5">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+1.75rem)] z-40 overflow-x-clip px-1.5">
       <div className="mx-auto flex w-full max-w-[480px] justify-center">
         {renderDialog(
           <Button

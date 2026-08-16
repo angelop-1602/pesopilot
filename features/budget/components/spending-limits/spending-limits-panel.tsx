@@ -16,19 +16,14 @@ export function SpendingLimitsPanel({
   categories: Category[]
   monthId: string
 }) {
-  const usedCategoryIds = new Set(budgets.map((budget) => budget.categoryId))
-  const availableCategories = categories.filter(
-    (category) => !usedCategoryIds.has(category.id)
-  )
-
   const addBudget = (label: string) => {
     const trigger = (
       <Button
         className="rounded-full"
-        disabled={availableCategories.length === 0}
+        disabled={categories.length === 0}
         title={
-          availableCategories.length === 0
-            ? "Every expense category already has a budget this month."
+          categories.length === 0
+            ? "Add an expense category before creating a budget."
             : undefined
         }
       >
@@ -37,13 +32,13 @@ export function SpendingLimitsPanel({
       </Button>
     )
 
-    if (availableCategories.length === 0) {
+    if (categories.length === 0) {
       return trigger
     }
 
     return (
       <BudgetDialog
-        categories={availableCategories}
+        categories={categories}
         monthId={monthId}
         trigger={trigger}
       />
@@ -52,7 +47,9 @@ export function SpendingLimitsPanel({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex justify-end">{addBudget("Budget")}</div>
+      <div className="flex items-start justify-between gap-3">
+        {addBudget("Budget")}
+      </div>
       {budgets.length === 0 ? (
         <EmptyState
           icon={<RiPieChartLine aria-hidden="true" />}
@@ -66,17 +63,11 @@ export function SpendingLimitsPanel({
             const category = categories.find(
               (item) => item.id === budget.categoryId
             )
-            const editableCategories = categories.filter(
-              (item) =>
-                item.id === budget.categoryId ||
-                !usedCategoryIds.has(item.id)
-            )
-
             return (
               <BudgetRow
                 budget={budget}
                 categoryName={category?.name ?? "Unknown category"}
-                categories={editableCategories}
+                categories={categories}
                 key={budget.id}
                 monthId={monthId}
               />

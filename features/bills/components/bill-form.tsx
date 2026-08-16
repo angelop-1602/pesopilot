@@ -5,6 +5,10 @@ import { toast } from "sonner"
 
 import type { Account, Category } from "@/types/finance"
 import type { BillFormValues } from "@/features/bills/types/bill-form-values"
+import {
+  AttachmentField,
+  type PreparedImageAttachment,
+} from "@/features/attachments"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import {
@@ -21,6 +25,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { saveBill } from "@/features/bills/services/bill-commands"
+import { savePreparedAttachments } from "@/lib/db/services/attachment-writes"
 
 interface BillFormProps {
   accounts: Account[]
@@ -36,6 +41,9 @@ export function BillForm({
   onSaved,
 }: BillFormProps) {
   const [values, setValues] = useState(initialValues)
+  const [attachmentDrafts, setAttachmentDrafts] = useState<
+    PreparedImageAttachment[]
+  >([])
   const [isSaving, setIsSaving] = useState(false)
 
   const updateValue = <Key extends keyof BillFormValues>(
@@ -48,9 +56,16 @@ export function BillForm({
     setIsSaving(true)
 
     try {
-      await saveBill(values, {
+      const bill = await saveBill(values, {
         initialFirstDueDate: initialValues.firstDueDate,
       })
+      await savePreparedAttachments({
+        ownerType: "bill",
+        ownerId: bill.id,
+        purpose: "bill_document",
+        prepared: attachmentDrafts,
+      })
+      setAttachmentDrafts([])
       toast.success("Bill saved")
       onSaved()
     } catch (error) {
@@ -179,6 +194,19 @@ export function BillForm({
             onChange={(event) => updateValue("notes", event.target.value)}
           />
         </Field>
+        <AttachmentField
+          description="Store invoice, statement, contract, or reference images for this recurring bill. Payment receipts belong to the actual payment transaction."
+          disabled={isSaving}
+          id="bill-documents"
+          label="Bill documents"
+          maxFiles={5}
+          multiple
+          ownerId={initialValues.id}
+          ownerType="bill"
+          purpose="bill_document"
+          value={attachmentDrafts}
+          onChange={setAttachmentDrafts}
+        />
       </FieldGroup>
       <div className="sticky bottom-0 -mx-5 bg-background px-5 pb-1 pt-3">
         <Button

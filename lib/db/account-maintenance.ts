@@ -1,6 +1,6 @@
 import type { Account } from "@/types/finance"
 import { notifyDataChanged } from "@/lib/db/change-events"
-import { nowIso } from "@/lib/db/client"
+import { getDb, nowIso } from "@/lib/db/client"
 import {
   listAccounts,
   putAccounts,
@@ -25,25 +25,43 @@ export async function migrateAccountsToProductModel() {
 }
 
 export async function closeCreditCardStatementsIfNeeded() {
-  const accounts = await listAccounts({ includeArchived: true })
+  const db = getDb()
   const now = nowIso()
-  const updates: Account[] = []
+  const updateCount = await db.transaction(
+    "rw",
+    [db.accounts, db.transactions],
+    async () => {
+      const [accounts, transactions] = await Promise.all([
+        db.accounts.toArray(),
+        db.transactions.toArray(),
+      ])
+      const updates: Account[] = []
 
-  for (const account of accounts) {
-    const updatedAccount = maybeCloseCreditCardStatement(account)
+      for (const account of accounts) {
+        const updatedAccount = maybeCloseCreditCardStatement(
+          account,
+          transactions
+        )
 
-    if (updatedAccount) {
-      updates.push({
-        ...updatedAccount,
-        updatedAt: now,
-      })
+        if (updatedAccount) {
+          updates.push({
+            ...updatedAccount,
+            updatedAt: now,
+          })
+        }
+      }
+
+      if (updates.length > 0) {
+        await db.accounts.bulkPut(updates)
+      }
+
+      return updates.length
     }
-  }
+  )
 
-  if (updates.length === 0) {
+  if (updateCount === 0) {
     return
   }
 
-  await putAccounts(updates)
   notifyDataChanged()
 }

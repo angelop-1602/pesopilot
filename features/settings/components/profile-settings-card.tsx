@@ -5,6 +5,10 @@ import { RiSaveLine, RiUserLine } from "@remixicon/react"
 import { toast } from "sonner"
 
 import type { AppSettings } from "@/types/finance"
+import {
+  AttachmentField,
+  type PreparedImageAttachment,
+} from "@/features/attachments"
 import { saveDisplayName } from "@/features/settings/services/profile-settings-commands"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,9 +27,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { getSettingsDisplayName } from "@/lib/finance/settings"
+import { savePreparedAttachments } from "@/lib/db/services/attachment-writes"
 
 export function ProfileSettingsCard({ settings }: { settings: AppSettings }) {
   const [displayName, setDisplayName] = useState(settings.displayName ?? "")
+  const [attachmentDrafts, setAttachmentDrafts] = useState<
+    PreparedImageAttachment[]
+  >([])
   const [isSaving, setIsSaving] = useState(false)
   const previewName = getSettingsDisplayName({ ...settings, displayName })
 
@@ -34,8 +42,15 @@ export function ProfileSettingsCard({ settings }: { settings: AppSettings }) {
     setIsSaving(true)
 
     try {
-      await saveDisplayName(displayName)
-      toast.success("Display name saved")
+      const savedSettings = await saveDisplayName(displayName)
+      await savePreparedAttachments({
+        ownerType: "profile",
+        ownerId: savedSettings.id,
+        purpose: "profile_image",
+        prepared: attachmentDrafts,
+      })
+      setAttachmentDrafts([])
+      toast.success("Profile saved")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save.")
     } finally {
@@ -61,6 +76,17 @@ export function ProfileSettingsCard({ settings }: { settings: AppSettings }) {
       <CardContent>
         <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
           <FieldGroup>
+            <AttachmentField
+              description="This picture is stored only in this browser and your encrypted backups."
+              disabled={isSaving}
+              id="profile-image"
+              label="Profile picture"
+              ownerId={settings.id}
+              ownerType="profile"
+              purpose="profile_image"
+              value={attachmentDrafts}
+              onChange={setAttachmentDrafts}
+            />
             <Field>
               <FieldLabel htmlFor="settings-display-name">
                 Display name
@@ -82,7 +108,7 @@ export function ProfileSettingsCard({ settings }: { settings: AppSettings }) {
             ) : (
               <RiSaveLine data-icon="inline-start" aria-hidden="true" />
             )}
-            {isSaving ? "Saving..." : "Save name"}
+            {isSaving ? "Saving..." : "Save profile"}
           </Button>
         </form>
       </CardContent>

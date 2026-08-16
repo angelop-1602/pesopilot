@@ -6,6 +6,7 @@ import {
   putTransaction,
 } from "@/lib/db/repositories/transactions"
 import { syncAccountBalancesInTransaction } from "@/lib/db/services/account-balance-sync"
+import { deleteAttachmentsForOwnerInTransaction } from "@/lib/db/services/attachment-writes"
 
 export async function saveTransactionWithBalanceSync(
   transaction: Transaction
@@ -24,9 +25,19 @@ export async function saveTransactionWithBalanceSync(
 export async function deleteTransactionWithBalanceSync(id: string) {
   const db = getDb()
 
-  await db.transaction("rw", [db.accounts, db.transactions], async () => {
-    await deleteTransactionRecord(id)
-    await syncAccountBalancesInTransaction(db)
-  })
+  await db.transaction(
+    "rw",
+    [
+      db.accounts,
+      db.transactions,
+      db.attachments,
+      db.attachmentContents,
+    ],
+    async () => {
+      await deleteAttachmentsForOwnerInTransaction(db, "transaction", id)
+      await deleteTransactionRecord(id)
+      await syncAccountBalancesInTransaction(db)
+    }
+  )
   notifyDataChanged()
 }

@@ -9,10 +9,25 @@ export async function findBudgetRecordByMonthCategory(
   monthId: string,
   categoryId: string
 ) {
-  return getDb().budgets
+  const budgets = await listBudgetRecordsForMonthCategory(monthId, categoryId)
+
+  return budgets[0]
+}
+
+export async function listBudgetRecordsForMonthCategory(
+  monthId: string,
+  categoryId: string
+) {
+  const budgets = await getDb().budgets
     .where("[monthId+categoryId]")
     .equals([monthId, categoryId])
-    .first()
+    .toArray()
+
+  return budgets.sort(
+    (left, right) =>
+      left.createdAt.localeCompare(right.createdAt) ||
+      left.id.localeCompare(right.id)
+  )
 }
 
 export async function putBudgetRecord(budget: MonthlyBudget) {

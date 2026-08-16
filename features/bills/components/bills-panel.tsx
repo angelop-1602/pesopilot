@@ -5,6 +5,8 @@ import type {
   Bill,
   BillOccurrence,
   Category,
+  MonthlyBudget,
+  Transaction,
 } from "@/types/finance"
 import { BillDialog } from "@/features/bills/components/bill-dialog"
 import { BillRow } from "@/features/bills/components/bill-row"
@@ -14,15 +16,19 @@ import { Button } from "@/components/ui/button"
 interface BillsPanelProps {
   accounts: Account[]
   bills: Bill[]
+  budgets: MonthlyBudget[]
   categories: Category[]
   occurrences: BillOccurrence[]
+  transactions: Transaction[]
 }
 
 export function BillsPanel({
   accounts,
   bills,
+  budgets,
   categories,
   occurrences,
+  transactions,
 }: BillsPanelProps) {
   const addBill = (variant: "default" | "outline" = "default") => (
     <BillDialog
@@ -58,9 +64,11 @@ export function BillsPanel({
           {occurrences.map((occurrence) => (
             <BillRow
               accounts={accounts}
+              budgets={budgets}
               categories={categories}
               key={occurrence.occurrenceKey}
               occurrence={occurrence}
+              transactions={transactions}
             />
           ))}
         </div>

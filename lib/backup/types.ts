@@ -1,6 +1,7 @@
 import type {
   Account,
   AppSettings,
+  AttachmentMetadata,
   BaseRecord,
   Bill,
   Category,
@@ -17,17 +18,36 @@ export interface AutomaticBackupTarget extends BaseRecord {
   lastError?: string
 }
 
-export interface FinanceBackup {
+export interface FinanceBackupDataV1 {
+  accounts: Account[]
+  categories: Category[]
+  transactions: Transaction[]
+  budgets: MonthlyBudget[]
+  goals: SavingsGoal[]
+  bills: Bill[]
+  settings: AppSettings[]
+}
+
+export interface LegacyFinanceBackup {
   schemaVersion: 1
   exportedAt: string
   app: "PesoPilot"
-  data: {
-    accounts: Account[]
-    categories: Category[]
-    transactions: Transaction[]
-    budgets: MonthlyBudget[]
-    goals: SavingsGoal[]
-    bills: Bill[]
-    settings: AppSettings[]
+  data: FinanceBackupDataV1
+}
+
+export interface BackupAttachment
+  extends Omit<AttachmentMetadata, "thumbnailBlob"> {
+  originalPath: string
+  thumbnailPath: string
+}
+
+export interface FinanceBackup {
+  schemaVersion: 2
+  exportedAt: string
+  app: "PesoPilot"
+  data: FinanceBackupDataV1 & {
+    attachments: BackupAttachment[]
   }
 }
+
+export type SupportedFinanceBackup = LegacyFinanceBackup | FinanceBackup

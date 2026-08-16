@@ -1,6 +1,7 @@
 "use client"
 
 import type { Account } from "@/types/finance"
+import { LocalAttachmentImage } from "@/features/attachments"
 import { InstitutionLogo } from "@/components/shared/institution-logo"
 import { getAccountProductLabel } from "@/lib/constants/account-products"
 import { getAccountInstitution } from "@/lib/constants/institutions"
@@ -26,13 +27,25 @@ export function AccountWalletTile({ account }: { account: Account }) {
       style={{ borderColor: `${account.color ?? institution.color}` }}
     >
       <div className="flex items-center justify-between gap-2">
-        <InstitutionLogo
-          color={account.color ?? institution.color}
-          institutionKey={account.institutionKey}
-          logoAsset={institution.logoAsset}
-          logoText={institution.logoText}
-          size="md"
-          textColor={institution.textColor}
+        <LocalAttachmentImage
+          alt={`${account.displayName} custom image`}
+          className="size-10 shrink-0 rounded-full object-cover"
+          fallback={
+            <InstitutionLogo
+              color={account.color ?? institution.color}
+              institutionKey={account.institutionKey}
+              logoAsset={institution.logoAsset}
+              logoText={institution.logoText}
+              size="md"
+              textColor={institution.textColor}
+            />
+          }
+          height={40}
+          ownerId={account.id}
+          ownerType="account"
+          purpose="account_image"
+          sizes="40px"
+          width={40}
         />
         <span
           className={cn(

@@ -7,6 +7,7 @@ export interface TransactionFormValues {
   accountId: Id
   transferAccountId?: Id
   categoryId?: Id
+  budgetId?: Id
   billId?: Id
   billOccurrenceDate?: string
   date: string

@@ -1,6 +1,10 @@
 "use client"
 
-import { RiDeleteBinLine, RiEditLine } from "@remixicon/react"
+import {
+  RiAlertLine,
+  RiDeleteBinLine,
+  RiEditLine,
+} from "@remixicon/react"
 import { toast } from "sonner"
 
 import type { Category } from "@/types/finance"
@@ -9,6 +13,7 @@ import { BudgetDialog } from "@/features/budget/components/spending-limits/budge
 import { deleteBudget } from "@/features/budget/services/budget-commands"
 import { ConfirmDialog } from "@/components/shared/confirm-dialog"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { getBudgetDisplayName } from "@/lib/finance/budgets"
 import { centavosToInput, formatPeso } from "@/lib/finance/currency"
@@ -26,7 +31,10 @@ export function BudgetRow({
 }) {
   const resolvedCategoryName = categoryName.trim() || "Unknown category"
   const budgetName = getBudgetDisplayName(budget, resolvedCategoryName)
-  const detail = `${formatPeso(budget.remainingCentavos)} remaining`
+  const isOverBudget = budget.remainingCentavos < 0
+  const detail = isOverBudget
+    ? `${formatPeso(Math.abs(budget.remainingCentavos))} over budget`
+    : `${formatPeso(budget.remainingCentavos)} remaining`
 
   return (
     <div className="border-b border-border/70 p-4 last:border-b-0">
@@ -36,7 +44,7 @@ export function BudgetRow({
           <p className="mt-0.5 text-xs text-muted-foreground">
             {budgetName === resolvedCategoryName
               ? detail
-              : `${resolvedCategoryName} · ${detail}`}
+              : `${resolvedCategoryName} / ${detail}`}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -63,7 +71,7 @@ export function BudgetRow({
           />
           <ConfirmDialog
             title={`Delete ${budgetName}?`}
-            description="This removes the monthly limit only. Transactions stay untouched."
+            description="Only a budget without assigned expenses can be deleted. Transactions stay untouched."
             confirmLabel="Delete"
             trigger={
               <Button
@@ -91,6 +99,16 @@ export function BudgetRow({
         className="mt-2"
         value={budget.progress}
       />
+      {isOverBudget && (
+        <Alert className="mt-3" variant="destructive">
+          <RiAlertLine aria-hidden="true" />
+          <AlertTitle>Limit exceeded</AlertTitle>
+          <AlertDescription>
+            Spending is {formatPeso(Math.abs(budget.remainingCentavos))} above
+            this budget. New expenses can still be recorded.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }

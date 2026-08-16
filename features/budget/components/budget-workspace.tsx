@@ -1,6 +1,7 @@
 "use client"
 
 import { BudgetSummary } from "@/features/budget/components/budget-summary"
+import { CreditCardsPanel } from "@/features/budget/components/credit-cards/credit-cards-panel"
 import { GoalsPanel } from "@/features/budget/components/goals/goals-panel"
 import { BudgetingMethodPanel } from "@/features/budget/components/method/budgeting-method-panel"
 import { SpendingLimitsPanel } from "@/features/budget/components/spending-limits/spending-limits-panel"
@@ -13,6 +14,7 @@ export function BudgetWorkspace() {
   const {
     budgetSpend,
     budgetedCentavos,
+    creditCardSummaries,
     data,
     error,
     expenseCategories,
@@ -36,8 +38,9 @@ export function BudgetWorkspace() {
         spentCentavos={spentCentavos}
       />
       <Tabs defaultValue="budgets">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="budgets">Budgets</TabsTrigger>
+          <TabsTrigger value="cards">Cards</TabsTrigger>
           <TabsTrigger value="goals">Goals</TabsTrigger>
           <TabsTrigger value="method">Method</TabsTrigger>
         </TabsList>
@@ -46,6 +49,16 @@ export function BudgetWorkspace() {
             budgets={budgetSpend}
             categories={expenseCategories}
             monthId={monthId}
+          />
+        </TabsContent>
+        <TabsContent value="cards">
+          <CreditCardsPanel
+            accounts={data.accounts}
+            bills={data.bills}
+            budgets={data.budgets}
+            categories={data.categories}
+            summaries={creditCardSummaries}
+            transactions={data.transactions}
           />
         </TabsContent>
         <TabsContent value="goals">

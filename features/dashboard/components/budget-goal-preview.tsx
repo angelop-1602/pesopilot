@@ -4,6 +4,7 @@ import Link from "next/link"
 import { RiFlagLine, RiPieChartLine } from "@remixicon/react"
 
 import type { SavingsGoal } from "@/types/finance"
+import { LocalAttachmentImage } from "@/features/attachments"
 import { Progress } from "@/components/ui/progress"
 import { getGoalProgress } from "@/lib/finance/goal-progress"
 import { formatPeso } from "@/lib/finance/currency"
@@ -21,7 +22,9 @@ export function BudgetGoalPreview({
 }: BudgetGoalPreviewProps) {
   const primaryGoal = goals.find((goal) => goal.status === "active") ?? goals[0]
   const budgetProgress =
-    budgetedCentavos > 0 ? Math.min(100, (spentCentavos / budgetedCentavos) * 100) : 0
+    budgetedCentavos > 0
+      ? Math.min(100, (spentCentavos / budgetedCentavos) * 100)
+      : 0
 
   return (
     <section className="flex flex-col gap-3 rounded-[1.7rem] bg-white/74 p-4 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
@@ -60,9 +63,21 @@ export function BudgetGoalPreview({
       <div className="border-t border-border/70 pt-3">
         {primaryGoal ? (
           <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700">
-              <RiFlagLine className="size-5" aria-hidden="true" />
-            </span>
+            <LocalAttachmentImage
+              alt={`${primaryGoal.name} cover`}
+              className="size-10 shrink-0 rounded-full object-cover"
+              fallback={
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700">
+                  <RiFlagLine className="size-5" aria-hidden="true" />
+                </span>
+              }
+              height={40}
+              ownerId={primaryGoal.id}
+              ownerType="goal"
+              purpose="goal_cover"
+              sizes="40px"
+              width={40}
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
                 <p className="truncate text-sm font-semibold">

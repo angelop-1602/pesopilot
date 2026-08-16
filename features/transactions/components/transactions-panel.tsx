@@ -1,6 +1,12 @@
 import { RiFileList3Line } from "@remixicon/react"
 
-import type { Account, Bill, Category, Transaction } from "@/types/finance"
+import type {
+  Account,
+  Bill,
+  Category,
+  MonthlyBudget,
+  Transaction,
+} from "@/types/finance"
 import type { TransactionFilter } from "@/features/transactions/types/transaction-filter"
 import { TransactionRow } from "@/features/transactions/components/transaction-row"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -12,6 +18,7 @@ import {
 interface TransactionsPanelProps {
   accounts: Account[]
   bills: Bill[]
+  budgets: MonthlyBudget[]
   categories: Category[]
   filter: TransactionFilter
   transactions: Transaction[]
@@ -21,6 +28,7 @@ interface TransactionsPanelProps {
 export function TransactionsPanel({
   accounts,
   bills,
+  budgets,
   categories,
   filter,
   transactions,
@@ -61,9 +69,11 @@ export function TransactionsPanel({
             <TransactionRow
               accounts={accounts}
               bills={bills}
+              budgets={budgets}
               categories={categories}
               key={transaction.id}
               transaction={transaction}
+              transactions={transactions}
             />
           ))}
         </div>

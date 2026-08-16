@@ -8,6 +8,10 @@ import type {
   SavingsGoal,
 } from "@/types/finance"
 import type { GoalFormValues } from "@/features/budget/types/goal-form"
+import {
+  AttachmentField,
+  type PreparedImageAttachment,
+} from "@/features/attachments"
 import { saveGoal } from "@/features/budget/services/goal-commands"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -17,6 +21,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select"
+import { savePreparedAttachments } from "@/lib/db/services/attachment-writes"
 
 export function GoalForm({
   accounts,
@@ -28,6 +33,9 @@ export function GoalForm({
   onSaved: () => void
 }) {
   const [values, setValues] = useState(initialValues)
+  const [attachmentDrafts, setAttachmentDrafts] = useState<
+    PreparedImageAttachment[]
+  >([])
   const [isSaving, setIsSaving] = useState(false)
 
   const updateValue = <Key extends keyof GoalFormValues>(
@@ -40,7 +48,14 @@ export function GoalForm({
     setIsSaving(true)
 
     try {
-      await saveGoal(values)
+      const goal = await saveGoal(values)
+      await savePreparedAttachments({
+        ownerType: "goal",
+        ownerId: goal.id,
+        purpose: "goal_cover",
+        prepared: attachmentDrafts,
+      })
+      setAttachmentDrafts([])
       toast.success("Goal saved")
       onSaved()
     } catch (error) {
@@ -62,6 +77,17 @@ export function GoalForm({
             onChange={(event) => updateValue("name", event.target.value)}
           />
         </Field>
+        <AttachmentField
+          description="Choose an optional cover image that makes this goal easy to recognize."
+          disabled={isSaving}
+          id="goal-cover"
+          label="Cover image"
+          ownerId={initialValues.id}
+          ownerType="goal"
+          purpose="goal_cover"
+          value={attachmentDrafts}
+          onChange={setAttachmentDrafts}
+        />
         <FieldGroup className="grid grid-cols-2 gap-3">
           <Field>
             <FieldLabel htmlFor="goal-target">Target</FieldLabel>
